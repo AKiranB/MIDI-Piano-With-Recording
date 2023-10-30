@@ -7,8 +7,6 @@ interface KeyProps {
 
 export default function Key({ note, type, onPress, sample }: KeyProps) {
   const handlePress = () => {
-    console.log(sample);
-
     const audio = new Audio(sample);
     audio.play();
     onPress(note);
@@ -18,7 +16,7 @@ export default function Key({ note, type, onPress, sample }: KeyProps) {
     <div
       className={`${
         type === "white"
-          ? "bg-white h-48 w-12 border border-gray-300"
+          ? "bg-white h-48 w-12 border border-gray-300 onClick:shadow-md"
           : "bg-black h-32 w-8"
       } cursor-pointer`}
       onClick={handlePress}
