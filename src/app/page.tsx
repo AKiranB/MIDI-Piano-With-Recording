@@ -5,26 +5,27 @@ import { LinkedList, NotesList } from "../utils";
 
 export default function Main() {
   const octave = [
-    { note: "C4", type: "white", sample: "/C.wav" },
-    { note: "C#4", type: "black", sample: "/Cs.wav" },
-    { note: "D4", type: "white", sample: "/D.wav" },
-    { note: "D#4", type: "black", sample: "/Ds.wav" },
-    { note: "E4", type: "white", sample: "/E.wav" },
-    { note: "F4", type: "white", sample: "/F.wav" },
-    { note: "F#4", type: "black", sample: "/Fs.wav" },
-    { note: "G4", type: "white", sample: "/G.wav" },
-    { note: "G#4", type: "black", sample: "/Gs.wav" },
-    { note: "A4", type: "white", sample: "/A.wav" },
-    { note: "A#4", type: "black", sample: "/As.wav" },
-    { note: "B4", type: "white", sample: "/B.wav" },
+    { note: "C", type: "white", sample: "/C.wav" },
+    { note: "C#", type: "black", sample: "/Cs.wav" },
+    { note: "D", type: "white", sample: "/D.wav" },
+    { note: "D#", type: "black", sample: "/Ds.wav" },
+    { note: "E", type: "white", sample: "/E.wav" },
+    { note: "F", type: "white", sample: "/F.wav" },
+    { note: "F#", type: "black", sample: "/Fs.wav" },
+    { note: "G", type: "white", sample: "/G.wav" },
+    { note: "G#", type: "black", sample: "/Gs.wav" },
+    { note: "A", type: "white", sample: "/A.wav" },
+    { note: "A#", type: "black", sample: "/As.wav" },
+    { note: "B", type: "white", sample: "/B.wav" },
   ];
 
   const [recording, setRecording] = useState(false);
   const [startTime, setStartTime] = useState(0);
   const [recordingLength, setRecordingLength] = useState(0);
-  const notesListRef = useRef<LinkedList>(new NotesList());
+  const notesListRef = useRef(new NotesList());
 
   function startRecording() {
+    notesListRef.current.clear();
     const start = new Date().getTime();
     setStartTime(start);
     setRecording(true);
@@ -47,6 +48,32 @@ export default function Main() {
     }
   }
 
+  function playNote(note: string) {
+    console.log(note);
+    const keyElement = document.querySelector(
+      `[data-note='${note}']`
+    ) as HTMLElement;
+    console.log(keyElement);
+    keyElement?.click();
+  }
+
+  function handlePlayback() {
+    if (notesListRef.current.isEmpty()) return;
+    let lastTime = 0;
+    let noteNode = notesListRef.current.head;
+    console.log(noteNode);
+    while (noteNode) {
+      const delay = noteNode.noteData.time - lastTime;
+      const note = noteNode.noteData.note;
+      setTimeout(() => {
+        playNote(note);
+      }, delay);
+
+      lastTime = noteNode.noteData.time;
+      noteNode = noteNode.next;
+    }
+  }
+
   return (
     <main className="flex min-h-screen flex-col items-center p-24">
       {recording && <div className="bg-red-200">Recording</div>}
@@ -61,6 +88,14 @@ export default function Main() {
         className="px-24 m-24"
       >
         Record
+      </button>
+      <button
+        className="bg-green-300"
+        onClick={() => {
+          handlePlayback();
+        }}
+      >
+        Play
       </button>
       <div className="flex">
         {octave.map((key, i) => {
