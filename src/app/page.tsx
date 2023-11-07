@@ -1,5 +1,5 @@
 "use client";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Key from "../components/key";
 import { LinkedList, NotesList } from "../utils";
 
@@ -23,6 +23,23 @@ export default function Main() {
   const [startTime, setStartTime] = useState(0);
   const [recordingLength, setRecordingLength] = useState(0);
   const notesListRef = useRef(new NotesList());
+
+  const polyphonicNotes = [
+    { note: "C", time: 1000 },
+    { note: "D", time: 1000 },
+    { note: "E", time: 1000 },
+  ];
+
+  useEffect(() => {
+    for (let i = 0; i < polyphonicNotes.length; i++) {
+      notesListRef.current.append(polyphonicNotes[i]);
+    }
+    notesListRef.current.printList();
+  }, []);
+
+  const audioContext = useRef(new AudioContext());
+
+  console.log(audioContext.current.baseLatency);
 
   function startRecording() {
     notesListRef.current.clear();
@@ -49,27 +66,35 @@ export default function Main() {
   }
 
   function playNote(note: string) {
-    console.log(note);
-    const keyElement = document.querySelector(
-      `[data-note='${note}']`
-    ) as HTMLElement;
-    console.log(keyElement);
-    keyElement?.click();
-  }
+    // Find the corresponding sample for the note
+    const noteSample = octave.find((n) => n.note === note);
 
+    fetch(noteSample?.sample as string)
+      .then((response) => response.arrayBuffer())
+      .then((arrayBuffer) => audioContext.current.decodeAudioData(arrayBuffer))
+      .then((audioBuffer) => {
+        const noteSource = audioContext.current.createBufferSource();
+        noteSource.buffer = audioBuffer;
+        noteSource.connect(audioContext.current.destination);
+        noteSource.start();
+      })
+      .catch((error) =>
+        console.error("Error with fetching the audio file:", error)
+      );
+  }
   function handlePlayback() {
     if (notesListRef.current.isEmpty()) return;
-    let lastTime = 0;
+
+    const startTime = Date.now();
     let noteNode = notesListRef.current.head;
-    console.log(noteNode);
-    while (noteNode) {
-      const delay = noteNode.noteData.time - lastTime;
+
+    while (noteNode !== null) {
+      const playTime = noteNode.noteData.time;
+      const delay = playTime - (Date.now() - startTime);
       const note = noteNode.noteData.note;
       setTimeout(() => {
         playNote(note);
       }, delay);
-
-      lastTime = noteNode.noteData.time;
       noteNode = noteNode.next;
     }
   }
