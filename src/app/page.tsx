@@ -65,10 +65,8 @@ export default function Main() {
     }
   }
 
-  function playNote(note: string) {
-    // Find the corresponding sample for the note
+  function playNote(note: string, time = 0) {
     const noteSample = octave.find((n) => n.note === note);
-
     fetch(noteSample?.sample as string)
       .then((response) => response.arrayBuffer())
       .then((arrayBuffer) => audioContext.current.decodeAudioData(arrayBuffer))
@@ -76,25 +74,27 @@ export default function Main() {
         const noteSource = audioContext.current.createBufferSource();
         noteSource.buffer = audioBuffer;
         noteSource.connect(audioContext.current.destination);
-        noteSource.start();
+        noteSource.start(audioContext.current.currentTime + time);
       })
       .catch((error) =>
         console.error("Error with fetching the audio file:", error)
       );
   }
+
   function handlePlayback() {
     if (notesListRef.current.isEmpty()) return;
-
-    const startTime = Date.now();
+    if (audioContext.current.state !== "closed") {
+      audioContext.current.close();
+    }
+    audioContext.current = new AudioContext();
+    const startTime = audioContext.current.currentTime;
+    console.log(startTime);
     let noteNode = notesListRef.current.head;
 
     while (noteNode !== null) {
-      const playTime = noteNode.noteData.time;
-      const delay = playTime - (Date.now() - startTime);
       const note = noteNode.noteData.note;
-      setTimeout(() => {
-        playNote(note);
-      }, delay);
+      const noteTime = startTime + noteNode.noteData.time / 1000;
+      playNote(note, noteTime);
       noteNode = noteNode.next;
     }
   }
