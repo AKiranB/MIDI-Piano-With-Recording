@@ -29,17 +29,7 @@ export default function Main() {
     { note: "D", time: 1000 },
     { note: "E", time: 1000 },
   ];
-
-  useEffect(() => {
-    for (let i = 0; i < polyphonicNotes.length; i++) {
-      notesListRef.current.append(polyphonicNotes[i]);
-    }
-    notesListRef.current.printList();
-  }, []);
-
   const audioContext = useRef(new AudioContext());
-
-  console.log(audioContext.current.baseLatency);
 
   function startRecording() {
     notesListRef.current.clear();
